@@ -29,5 +29,12 @@ extern uint32_t num_of_threads_allocated;
 extern struct TCB tasks[MAX_THREADS];
 
 
+void start_critical(void);
+
+void end_critical(void);
+
+
+
+
 
 #endif /* SRC_OS_H_ */
