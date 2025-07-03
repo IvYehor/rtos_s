@@ -11,27 +11,17 @@
 #include "stm32f3xx_hal.h"
 
 #include "app.h"
-
-
-#define STACK_SIZE 256
-#define SCHEDULER_PERIOD_MS 10
-#define MAX_THREADS 10
-
-struct TCB {
-	uint32_t *stack;
-	uint32_t *sp;
-	uint32_t state;
-};
+#include "os.h"
 
 // The word is thread X
 // Scheduler variables
 
 uint32_t current_thread;
 uint32_t scheduler_tick;
-uint32_t num_of_threads_allocated;
+uint32_t num_of_threads_allocated = 0;
 
 // Array of TCBs for the tasks
-struct TCB tasks[MAX_TASKS];
+struct TCB tasks[MAX_THREADS];
 
 
 
@@ -52,8 +42,27 @@ void end_critical(void) {
 void setup_stack(uint32_t *stack_pt, uint32_t **thread_sp, void (*thread_func)(void)) {
 	uint32_t *thread_stack_top = (uint32_t *)stack_pt + STACK_SIZE;
 
+
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+	*(--thread_stack_top) = 0x0; // FPU
+
 	*(--thread_stack_top) = 0x01000000; // status register
-	*(--thread_stack_top) = (uint32_t)thread_func; // Return address
+	// Thumb state: & ~0x1
+	*(--thread_stack_top) = ((uint32_t)thread_func) | 0x1; // Return address
 	*(--thread_stack_top) = 0xFFFFFFFD; // LR
 	*(--thread_stack_top) = 0x12121212; // R12
 	*(--thread_stack_top) = 0x03030303; // R3
@@ -77,7 +86,7 @@ void setup_stack(uint32_t *stack_pt, uint32_t **thread_sp, void (*thread_func)(v
 uint32_t CreateTask(void (*thread_func)(void)) {
 	start_critical();
 
-	if(num_of_threads_allocated >= MAX_TASKS) {
+	if(num_of_threads_allocated >= MAX_THREADS) {
 		// Too many threads allocated
 		end_critical();
 		return 1;
@@ -86,6 +95,10 @@ uint32_t CreateTask(void (*thread_func)(void)) {
 
 	// Create the stack
 	uint32_t *stack = (uint32_t *)aligned_alloc(sizeof(uint32_t) * STACK_SIZE, 8);
+
+	if(stack == NULL) {
+		return 2;
+	}
 
 	tasks[num_of_threads_allocated].stack = stack;
 
@@ -99,17 +112,30 @@ uint32_t CreateTask(void (*thread_func)(void)) {
 	num_of_threads_allocated++;
 
 	end_critical();
+
+	return 0;
 }
 
+void default_thread_func(void) {
+	while(1) {
+
+	}
+}
 
 void StartScheduler(void) {
 
 	//setup_stack(thread1_stack, &thread1_sp, thread1_func);
 	//setup_stack(thread2_stack, &thread2_sp, thread2_func);
 
-	current_thread = 0;
+	if (num_of_threads_allocated == 0) {
+		// No threads were created
+		while(1);
+	}
+
+	current_thread = NO_TASK_RUNNNING;
 	scheduler_tick = 0;
 
+	//CreateTask(default_thread_func);
 
 	SysTick->LOAD  = (uint32_t)(8000 * SCHEDULER_PERIOD_MS - 1);                         /* set reload register */
 	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
@@ -132,7 +158,11 @@ void StartScheduler(void) {
 
 
 
+void default_task(void) {
+	while(1) {
 
+	}
+}
 // PA5 thread1
 // PB1 thread2
 
@@ -219,14 +249,6 @@ void run_app() {
 
 
 
+/*void pendsv(void) {
 
-__attribute__((naked))
-void sched(void) {
-	__asm volatile(
-			"nop"
-	);
-}
-
-void pendsv(void) {
-
-}
+}*/

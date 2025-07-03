@@ -5,7 +5,7 @@
  *      Author: yehor
  */
 
-
+/*
 .syntax unified
 .cpu cortex-m4
 .thumb
@@ -99,3 +99,4 @@ end_if:
 	//add r0, r0, r1
 	CPSIE I
 	bx lr
+*/
