@@ -1,0 +1,9 @@
+../Drivers/CMSIS/Include/core_cm4.h:1816:22:__NVIC_SetPriority	2
+../Core/Src/app.c:29:6:start_critical	1
+../Core/Src/app.c:33:6:end_critical	1
+../Core/Src/app.c:40:6:thread1_func	3
+../Core/Src/app.c:69:6:thread2_func	3
+../Core/Src/app.c:110:6:setup_stack	1
+../Core/Src/app.c:134:6:run_app	1
+../Core/Src/app.c:164:6:sched	1
+../Core/Src/app.c:170:6:pendsv	1
