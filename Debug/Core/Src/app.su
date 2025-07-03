@@ -1,9 +1,0 @@
-../Drivers/CMSIS/Include/core_cm4.h:1816:22:__NVIC_SetPriority	16	static
-../Core/Src/app.c:29:6:start_critical	4	static,ignoring_inline_asm
-../Core/Src/app.c:33:6:end_critical	4	static,ignoring_inline_asm
-../Core/Src/app.c:40:6:thread1_func	24	static
-../Core/Src/app.c:69:6:thread2_func	24	static
-../Core/Src/app.c:110:6:setup_stack	32	static
-../Core/Src/app.c:134:6:run_app	8	static
-../Core/Src/app.c:164:6:sched	0	static,ignoring_inline_asm
-../Core/Src/app.c:170:6:pendsv	4	static
