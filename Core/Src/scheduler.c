@@ -40,7 +40,6 @@ void Sched_handler(void) {
 
 	// Choose the next thread here
 	// There must be at least one thread
-
 	static uint32_t *new_sp;
 	static uint32_t **old_sp;
 	if(current_thread == NO_TASK_RUNNNING) {
@@ -50,7 +49,7 @@ void Sched_handler(void) {
 		current_thread = 0;
 	}
 	else {
-		uint32_t next_thread = (current_thread + 1) % MAX_THREADS;
+		uint32_t next_thread = (current_thread + 1) % num_of_threads_allocated;
 		new_sp = tasks[next_thread].sp;
 		old_sp = &tasks[current_thread].sp;
 		current_thread = next_thread;
