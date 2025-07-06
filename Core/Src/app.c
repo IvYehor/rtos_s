@@ -19,6 +19,9 @@
 // PA5 thread1
 // PB1 thread2
 
+struct TCB *task1_handler;
+struct TCB *task2_handler;
+
 void thread1_func(void) {
 	uint32_t led_on = 0;
 	uint32_t prev_sched_tick = 0;
@@ -85,8 +88,8 @@ void run_app() {
 	GPIOA->BSRR = (0x1 << 5) << 0;
 	GPIOB->BSRR = (0x1 << 1) << 0;
 
-	CreateTask(thread1_func);
-	CreateTask(thread2_func);
+	CreateTask(thread1_func, &task1_handler);
+	CreateTask(thread2_func, &task2_handler);
 
 	StartScheduler();
 

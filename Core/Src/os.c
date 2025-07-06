@@ -6,17 +6,32 @@
  */
 
 #include "os.h"
+#include "cmsis_gcc.h"
+#include "stm32f3xx_hal.h"
+#include <stdlib.h>
 
 uint32_t current_thread;
 uint32_t scheduler_tick;
-uint32_t num_of_threads_allocated = 0;
-
+//uint32_t num_of_threads_allocated = 0;
+uint32_t *scheduler_sp;
+uint32_t os_running = 0;
 
 // Array of TCBs for the tasks
 struct TCB tasks[MAX_THREADS];
 
 
 
+/*
+ *  There are threads that change some variables while they run
+ *  And there is a scheduler that tries to deal with what the threads told it to do
+ *
+ *
+ *
+ *
+ * */
+
+// Call scheduler immediately when wants to delay or delete?
+// Set some magic values to check if stacks got out of range
 
 void start_critical(void) {
 	__disable_irq();
@@ -29,6 +44,7 @@ void end_critical(void) {
 // Assigns stack statically because it needs 8-byte alignment
 // Does malloc provide 8-byte alignment?
 // Uses STACK_SIZE
+// Error code convention
 
 
 void setup_stack(uint32_t *stack_pt, uint32_t **thread_sp, void (*thread_func)(void)) {
@@ -75,37 +91,60 @@ void setup_stack(uint32_t *stack_pt, uint32_t **thread_sp, void (*thread_func)(v
 }
 
 // Returns >0 if error occured
-uint32_t CreateTask(void (*thread_func)(void)) {
+enum ErrorCode CreateTask(void (*thread_func)(void), struct TCB **returned_tcb) {
 	start_critical();
 
-	if(num_of_threads_allocated >= MAX_THREADS) {
+	uint32_t new_thread_index = MAX_THREADS;
+	for(uint32_t i = 0; i < MAX_THREADS; ++i) {
+		if(!tasks[i].allocated) {
+			new_thread_index = i;
+			break;
+		}
+	}
+
+	if(new_thread_index == MAX_THREADS) {
 		// Too many threads allocated
 		end_critical();
-		return 1;
+		return ERROR_FAIL;
 	}
 
 
 	// Create the stack
 	uint32_t *stack = (uint32_t *)aligned_alloc(sizeof(uint32_t) * STACK_SIZE, 8);
-
 	if(stack == NULL) {
-		return 2;
+		// Could not allocate stack
+		return ERROR_FAIL;
 	}
 
-	tasks[num_of_threads_allocated].stack = stack;
+	tasks[new_thread_index].stack = stack;
 
-	setup_stack(stack, &(tasks[num_of_threads_allocated].sp), thread_func);
+	setup_stack(stack, &(tasks[new_thread_index].sp), thread_func);
 
-	// Set the task state
+	//tasks[new_thread_index].state = READY;
+	tasks[new_thread_index].allocated = 1;
+	tasks[new_thread_index].pending_delete = 0;
 
 
-
-
-	num_of_threads_allocated++;
+	(*returned_tcb) = &tasks[new_thread_index];
 
 	end_critical();
 
-	return 0;
+
+	return ERROR_OK;
+}
+
+void DeleteTask(struct TCB *task) {
+	start_critical();
+
+	task->pending_delete = 1;
+
+	end_critical();
+
+	// Out of critical
+	// Change to SVC
+	if(task == &tasks[current_thread]) {
+		while(1);
+	}
 }
 
 void default_thread_func(void) {
@@ -114,18 +153,32 @@ void default_thread_func(void) {
 	}
 }
 
+void InitScheduler(void) {
+	for(size_t i = 0; i < MAX_THREADS; ++i) {
+		tasks[i].allocated = 0;
+	}
+}
+
 void StartScheduler(void) {
 
-	//setup_stack(thread1_stack, &thread1_sp, thread1_func);
-	//setup_stack(thread2_stack, &thread2_sp, thread2_func);
-
-	if (num_of_threads_allocated == 0) {
+	/*if (num_of_threads_allocated == 0) {
 		// No threads were created
+		while(1);
+	}*/
+
+	uint32_t *scheduler_stack = aligned_alloc(sizeof(uint32_t) * SCHEDULER_STACK_SIZE, 8);
+
+	if(scheduler_stack == NULL) {
+		// Could not allocate scheduler stack
 		while(1);
 	}
 
+	uint32_t *scheduler_stack_top = (uint32_t *)(scheduler_stack + SCHEDULER_STACK_SIZE);
+	scheduler_sp = --scheduler_stack_top;
+
 	current_thread = NO_TASK_RUNNNING;
 	scheduler_tick = 0;
+	os_running = 1;
 
 	//CreateTask(default_thread_func);
 
