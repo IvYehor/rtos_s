@@ -20,6 +20,7 @@ uint32_t os_running = 0;
 // Array of TCBs for the tasks
 struct TCB tasks[MAX_THREADS];
 
+uint32_t scheduler_stack_array[SCHEDULER_STACK_SIZE] __attribute__ ((aligned(8)));
 
 
 /*
@@ -167,12 +168,7 @@ void StartScheduler(void) {
 		while(1);
 	}*/
 
-	uint32_t *scheduler_stack = aligned_alloc(sizeof(uint32_t) * SCHEDULER_STACK_SIZE, 8);
-
-	if(scheduler_stack == NULL) {
-		// Could not allocate scheduler stack
-		while(1);
-	}
+	uint32_t *scheduler_stack = scheduler_stack_array;
 
 	uint32_t *scheduler_stack_top = (uint32_t *)(scheduler_stack + SCHEDULER_STACK_SIZE);
 	scheduler_sp = --scheduler_stack_top;
