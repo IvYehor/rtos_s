@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "os.h"
-
+#include "custom_heap.h"
 
 
 // Used -fomit-frame-pointer
@@ -18,6 +18,8 @@
 // Imagine there are no interrupts except for the systick interrupt
 // r12?
 
+// sp depricated problem
+// lr not pushed problem
 
 // Do not use stack here at all (not really). Only registers and global variables
 
@@ -54,7 +56,8 @@ void Sched_handler(void) {
 
 	// Switch to the scheduler stack
 	__asm volatile(
-		"MOV sp, %0"
+		"MOV sp, %0 \n"
+		"PUSH {lr} \n" // ?????
 		:
 		: "r" (scheduler_sp)
 		: "sp"
@@ -64,14 +67,18 @@ void Sched_handler(void) {
 	++scheduler_tick;
 
 	// Choose the next thread here
-	// There must be at least one thread
+	// There must be at least one thread.
+
+	//Does not push lr when calling free_thread_stack
 
 	static uint32_t thread_index;
 	for(thread_index = 0; thread_index < MAX_THREADS; ++thread_index) {
 		if(tasks[thread_index].pending_delete) {
 			tasks[thread_index].pending_delete = 0;
 			tasks[thread_index].allocated = 0;
-			free(tasks[thread_index].stack);
+
+			free_thread_stack(tasks[thread_index].stack);
+			//free(tasks[thread_index].stack);
 		}
 	}
 
@@ -113,7 +120,8 @@ void Sched_handler(void) {
 
 	// Set sp
 	__asm volatile(
-		"MOV sp, %0"
+		"POP {LR} \n"
+		"MOV sp, %0 \n"
 		:
 		: "r" (new_sp)
 		: "sp"

@@ -112,7 +112,7 @@ enum ErrorCode CreateTask(void (*thread_func)(void), struct TCB **returned_tcb) 
 
 
 	// Create the stack
-	uint32_t *stack = (uint32_t *)aligned_alloc(sizeof(uint32_t) * STACK_SIZE, 8);
+	uint32_t *stack = allocate_thread_stack();
 	if(stack == NULL) {
 		// Could not allocate stack
 		return ERROR_FAIL;

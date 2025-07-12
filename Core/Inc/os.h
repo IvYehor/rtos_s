@@ -56,6 +56,11 @@ void DeleteTask(struct TCB *task);
 void StartScheduler(void);
 
 
+// Pass arguments to threads
+// Mutexes
+// Delays (accurate delayes?)
+// Task wrappers????
+// Priorities?
 
 
 #endif /* SRC_OS_H_ */

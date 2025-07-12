@@ -15,6 +15,8 @@
 uint32_t heap_memory[HEAP_SIZE] __attribute__ ((aligned(8)));
 // Just create the memory for threads and pass the pointers to the beginning
 
+// Return indexes along with stack addresses?
+
 // HEAP_SIZE / STACK_SIZE rounded towards 0 (should generally be divisible)
 #define MAX_NUM_OF_STACKS (HEAP_SIZE / STACK_SIZE)
 // Use bitfields later
@@ -49,7 +51,7 @@ enum ErrorCode free_thread_stack(uint32_t *thread_stack) {
 		return ERROR_FAIL;
 	}
 
-	ptrdiff_t stack_i = ((uint32_t *)heap_memory - thread_stack) / (ptrdiff_t) STACK_SIZE;
+	ptrdiff_t stack_i = (thread_stack - (uint32_t *)heap_memory) / (ptrdiff_t) STACK_SIZE;
 	if(stack_allocated[stack_i] == 1) {
 		stack_allocated[stack_i] = 0;
 		return ERROR_OK;
