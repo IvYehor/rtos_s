@@ -10,11 +10,18 @@
 
 #include <stdint.h>
 
+// stack size in words
+// Should be divisible by 2?
 #define STACK_SIZE 256
+
 #define SCHEDULER_STACK_SIZE 256
+
 #define SCHEDULER_PERIOD_MS 10
 #define MAX_THREADS 5
 #define NO_TASK_RUNNNING MAX_THREADS
+
+// heap size in words
+#define HEAP_SIZE 256*5
 
 
 //enum TaskState { NOT_ALLOCATED, READY };

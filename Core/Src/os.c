@@ -8,6 +8,7 @@
 #include "os.h"
 #include "cmsis_gcc.h"
 #include "stm32f3xx_hal.h"
+#include "custom_heap.h"
 #include <stdlib.h>
 
 uint32_t current_thread;
