@@ -1,5 +1,5 @@
-/*
- * scheduler.c
+/**
+ * @file scheduler.c
  *
  *  Created on: Jul 3, 2025
  *      Author: yehor
@@ -23,6 +23,12 @@
 
 // Do not use stack here at all (not really). Only registers and global variables
 
+
+/**
+ * @brief The scheduler function
+ *
+ * For proper execution of the OS, the Systick interrupt should be assigned to this function
+ * */
 __attribute__((naked))
 void Sched_handler(void) {
 	// Save context

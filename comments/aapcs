@@ -1,0 +1,35 @@
+https://github.com/ARM-software/abi-aa/releases
+
+
+Some aspects of each variant – for example the allowable use of R9 – are determined by the execution environment. 
+Thus:
+
+It is possible for code complying strictly with the base standard to be PCS compatible with each of the variants.
+
+It is unusual for code complying with a variant to be compatible with code complying with any other variant.
+
+Code complying with a variant, or with the base standard, is not guaranteed to be compatible with an execution environment that requires those standards.
+
+!!! An execution environment may make further demands beyond the scope of the procedure call standard.
+
+
+
+Does not specify C++ ABI standard.
+
+Conformance ?
+
+Data types ?
+
+
+
+The Base Procedure Call Standard
+
+The base standard defines a machine-level, core-registers-only calling standard common to the Arm and Thumb instruction sets. It should be used for systems where there is no floating-point hardware, or where a high degree of inter-working with Thumb code is required.
+
+What about Thumb-2?
+
+
+Does callee save its part of context when a "naked" function is called?
+
+
+

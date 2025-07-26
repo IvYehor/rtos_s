@@ -1,5 +1,5 @@
-/*
- * os.c
+/**
+ * @file os.c
  *
  *  Created on: Jul 3, 2025
  *      Author: yehor
@@ -13,7 +13,6 @@
 
 uint32_t current_thread;
 uint32_t scheduler_tick;
-//uint32_t num_of_threads_allocated = 0;
 uint32_t *scheduler_sp;
 uint32_t os_running = 0;
 

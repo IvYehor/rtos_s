@@ -1,0 +1,54 @@
+https://www.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/01-RTOS-implementation
+
+https://nadler.com/embedded/newlibAndFreeRTOS.html
+
+reentancy 
+thread-safety
+
+_Thread_local
+
+MISRA-compliant
+
+_impure_ptr
+
+
+In a stunning bit of coding malpractice, STM's USB stack calls malloc from within an ISR 
+
+https://sourceware.org/newlib/libc.html
+
+Linker wrappers --wrap=<symbol>
+
+* newlib requires hook procedures __malloc_lock/unlock
+* multiple reentrancy structures (one per context), and a mechanism to create, initialize, and cleanup these structures, plus switching _impure_ptr to point at the correct reentrancy structure each time the context changes.
+
+isb instruction
+dsb instruction
+
+// Pass arguments to threads
+// Mutexes
+// Delays (accurate delayes?)
+// Task wrappers????
+// Priorities?
+// Different stack sizes for different tasks
+// Quitting sheduler ???
+// Task data structure
+// Newlib support
+// Check magic numbers for stacks
+// Check the cpu architecture version to be sure 
+// FPU support
+// Pipelining
+
+
+
+
+
+
+
+// Pass arguments to threads
+// Mutexes
+// Delays (accurate delayes?)
+// Task wrappers????
+// Priorities?
+// Different stack sizes for different tasks
+// Quitting sheduler ???
+// Task data structure

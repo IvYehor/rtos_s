@@ -1,5 +1,5 @@
-/*
- * custom_heap.c
+/**
+ * @file custom_heap.c
  *
  *  Created on: Jul 10, 2025
  *      Author: yehor
