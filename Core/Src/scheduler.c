@@ -100,7 +100,7 @@ void Sched_handler(void) {
 	// Loop around the threads starting from the current one (including the current one at the end)
 	for(relative_thread_index = 0; relative_thread_index < MAX_THREADS; ++relative_thread_index) {
 		thread_index = (current_thread + relative_thread_index + 1) % MAX_THREADS;
-		if(tasks[thread_index].allocated && tasks[thread_index].sleep_for_ticks == 0) {
+		if(tasks[thread_index].allocated && tasks[thread_index].sleep_for_ticks == 0 && tasks[thread_index].is_default == 0) {
 			new_sp = tasks[thread_index].sp;
 			current_thread = thread_index;
 			break;
@@ -109,8 +109,10 @@ void Sched_handler(void) {
 	}
 
 	if(new_sp == NULL) {
-		// No threads are allocated
-		while(1);
+		// No threads are allocated or non-sleeping
+		new_sp = tasks[default_thread_index].sp;
+		current_thread = default_thread_index;
+		//while(1);
 	}
 	/*if(current_thread == NO_TASK_RUNNNING) {
 		// This is the first execution of the scheduler function

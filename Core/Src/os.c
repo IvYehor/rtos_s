@@ -13,14 +13,19 @@
 
 uint32_t current_thread;
 uint32_t scheduler_tick;
-uint32_t *scheduler_sp;
 uint32_t os_running = 0;
 
 // Array of TCBs for the tasks
 struct TCB tasks[MAX_THREADS];
 
 uint32_t scheduler_stack_array[SCHEDULER_STACK_SIZE] __attribute__ ((aligned(8)));
+uint32_t *scheduler_sp;
 
+//uint32_t default_task_stack_array[DEFAULT_TASK_STACK_SIZE] __attribute__ ((aligned(8)));
+//uint32_t *default_task_sp;
+
+struct TCB *default_task_tcb;
+uint32_t default_thread_index;
 
 /*
  *  There are threads that change some variables while they run
@@ -125,6 +130,9 @@ enum ErrorCode CreateTask(void (*thread_func)(void), struct TCB **returned_tcb) 
 	tasks[new_thread_index].allocated = 1;
 	tasks[new_thread_index].pending_delete = 0;
 	tasks[new_thread_index].sleep_for_ticks = 0;
+	tasks[new_thread_index].is_default = 0;
+	tasks[new_thread_index].index = new_thread_index;
+
 
 
 	(*returned_tcb) = &tasks[new_thread_index];
@@ -168,16 +176,21 @@ void StartScheduler(void) {
 		while(1);
 	}*/
 
+	// Setup scheduler stack
 	uint32_t *scheduler_stack = scheduler_stack_array;
 
 	uint32_t *scheduler_stack_top = (uint32_t *)(scheduler_stack + SCHEDULER_STACK_SIZE);
 	scheduler_sp = --scheduler_stack_top;
 
+	// Default task
+	CreateTask(default_thread_func, &default_task_tcb);
+	default_task_tcb->is_default = 1;
+	default_thread_index = default_task_tcb->index;
+
 	current_thread = NO_TASK_RUNNNING;
 	scheduler_tick = 0;
 	os_running = 1;
 
-	//CreateTask(default_thread_func);
 
 	SysTick->LOAD  = (uint32_t)(8000 * SCHEDULER_PERIOD_MS - 1);                         /* set reload register */
 	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */

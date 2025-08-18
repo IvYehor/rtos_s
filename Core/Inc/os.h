@@ -17,6 +17,8 @@
 /// Stack size for the scheduler in words
 #define SCHEDULER_STACK_SIZE 256
 
+#define DEFAULT_TASK_STACK_SIZE 128
+
 #define SCHEDULER_PERIOD_MS 10
 #define MAX_THREADS 5
 
@@ -36,6 +38,8 @@ struct TCB {
 	uint32_t allocated;
 	uint32_t pending_delete;
 	uint32_t sleep_for_ticks;
+	uint32_t is_default;
+	uint32_t index;
 };
 
 enum ErrorCode { ERROR_OK, ERROR_FAIL };
@@ -49,6 +53,11 @@ extern uint32_t os_running;
 
 // Array of TCBs for the tasks
 extern struct TCB tasks[MAX_THREADS];
+
+// Default thread
+
+extern struct TCB *default_task_tcb;
+extern uint32_t default_thread_index;
 
 
 /**
