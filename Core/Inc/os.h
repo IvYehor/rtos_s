@@ -35,6 +35,7 @@ struct TCB {
 	uint32_t *sp;
 	uint32_t allocated;
 	uint32_t pending_delete;
+	uint32_t sleep_for_ticks;
 };
 
 enum ErrorCode { ERROR_OK, ERROR_FAIL };
@@ -95,7 +96,7 @@ void DeleteTask(struct TCB *task);
 
 void StartScheduler(void);
 
-
+void Delay(uint32_t scheduler_ticks);
 
 // Need to separate private and public declarations
 //enum TaskState { NOT_ALLOCATED, READY };

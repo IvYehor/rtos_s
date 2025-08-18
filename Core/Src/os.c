@@ -124,6 +124,7 @@ enum ErrorCode CreateTask(void (*thread_func)(void), struct TCB **returned_tcb) 
 	//tasks[new_thread_index].state = READY;
 	tasks[new_thread_index].allocated = 1;
 	tasks[new_thread_index].pending_delete = 0;
+	tasks[new_thread_index].sleep_for_ticks = 0;
 
 
 	(*returned_tcb) = &tasks[new_thread_index];
@@ -185,6 +186,26 @@ void StartScheduler(void) {
 
 	while(1) {
 
+	}
+}
+
+
+void Delay(uint32_t scheduler_ticks) {
+	start_critical();
+	if(current_thread == NO_TASK_RUNNNING) {
+		while(1);
+		// Error
+	}
+	tasks[current_thread].sleep_for_ticks = scheduler_ticks;
+	end_critical();
+
+	while(1) {
+		start_critical();
+		if(tasks[current_thread].sleep_for_ticks == 0) {
+			end_critical();
+			break;
+		}
+		end_critical();
 	}
 }
 
