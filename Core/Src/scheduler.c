@@ -29,54 +29,115 @@
  *
  * For proper execution of the OS, the Systick interrupt should be assigned to this function
  * */
+
+#define atomic_on() \
+	__asm volatile( \
+			"CPSID I\n" \
+			: \
+			: \
+			: "memory", "cc" \
+	)
+
+#define atomic_off() \
+	__asm volatile( \
+			"CPSIE I\n" \
+			: \
+			: \
+			: "memory", "cc" \
+	)
+
+
+#define save_r4r11() \
+	__asm volatile( \
+				"PUSH {r4-r11}" \
+				: \
+				: \
+				: "memory", "cc" \
+		)
+
+#define restore_r4r11() \
+	__asm volatile( \
+				"POP {r4-r11}\n" \
+				: \
+				: \
+				: "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "memory", "cc" \
+		)
+
+
+#define save_sp(old_sp) \
+	__asm volatile( \
+			"MOV %0, sp\n" \
+			: "=r" (*old_sp) \
+			: \
+			: \
+		)
+
+// ?????
+#define save_lr() \
+	__asm volatile( \
+				"PUSH {lr} \n" \
+				: \
+				: \
+				: "sp" \
+			)
+
+#define restore_lr() \
+	__asm volatile( \
+				"POP {LR} \n" \
+				: \
+				: \
+				: "sp" \
+			)
+
+
+#define switch_to_sp(new_sp) \
+	__asm volatile( \
+			"MOV sp, %0 \n" \
+			: \
+			: "r" (new_sp) \
+			: "sp" \
+		)
+
+#define exit_scheduler() \
+	__asm volatile( \
+			"BX LR" \
+			: \
+			: \
+			: "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "memory", "cc" \
+		)
+
 __attribute__((naked))
 void Sched_handler(void) {
-	// Save context
-	__asm volatile(
-			"CPSID I\n"
-			:
-			:
-			: "memory", "cc"
-	);
+	atomic_on();
+	save_r4r11();
 
-	__asm volatile(
-				"PUSH {r4-r11}"
-				:
-				:
-				: "memory", "cc"
-		);
+	static uint32_t *old_sp;
+	save_sp(old_sp);
 
+	switch_to_sp(scheduler_sp);
+	// Save lr to be able to call functions
+	//Does not push lr when calling free_thread_stack
+	save_lr();
 
-	// Save sp
+	// Scheduler logic starts here ...
+	// Choose the next thread here
+	// There must be at least one thread.
 
-	if(current_thread != NO_TASK_RUNNNING) {
-		static uint32_t **old_sp;
-		old_sp = &tasks[current_thread].sp;
-		__asm volatile(
-			"MOV %0, sp\n"
-			: "=r" (*old_sp)
-			:
-			:
-		);
+	// Interrupt from the beginning
+	// Interrupt from default thread
+	// Interrupt from a regular thread
+
+	if (current_thread == DEFAULT_TASK_RUNNNING) {
+		default_thread_sp = old_sp;
 	}
-
-	// Switch to the scheduler stack
-	__asm volatile(
-		"MOV sp, %0 \n"
-		"PUSH {lr} \n" // ?????
-		:
-		: "r" (scheduler_sp)
-		: "sp"
-	);
+	else if (current_thread != NO_TASK_RUNNNING) {
+		tasks[current_thread].sp = old_sp;
+	}
 
 	// Increment scheduler tick
 	++scheduler_tick;
 
-	// Choose the next thread here
-	// There must be at least one thread.
-
-	//Does not push lr when calling free_thread_stack
-
+	// Delete pending threads
 	static uint32_t thread_index;
 	for(thread_index = 0; thread_index < MAX_THREADS; ++thread_index) {
 		if(tasks[thread_index].pending_delete) {
@@ -88,12 +149,14 @@ void Sched_handler(void) {
 		}
 	}
 
+
+	// Choose value for new_sp
 	static uint32_t *new_sp;
+	new_sp = NULL;
 
 	static uint32_t relative_thread_index;
 
-	new_sp = NULL;
-	if(current_thread == NO_TASK_RUNNNING) {
+	if(current_thread == NO_TASK_RUNNNING || current_thread == DEFAULT_TASK_RUNNNING) {
 		current_thread = MAX_THREADS-1;
 		// Loop after the last one (starting from 0)
 	}
@@ -109,48 +172,46 @@ void Sched_handler(void) {
 
 	if(new_sp == NULL) {
 		// No threads are allocated
-		while(1);
+		new_sp = default_thread_sp;
 	}
-	/*if(current_thread == NO_TASK_RUNNNING) {
-		// This is the first execution of the scheduler function
-		new_sp = tasks[0].sp;
-		current_thread = 0;
-	}
-	else {
-		uint32_t next_thread = (current_thread + 1) % num_of_threads_allocated;
-		new_sp = tasks[next_thread].sp;
-
-		current_thread = next_thread;
-	}*/
-
 
 	// Set sp
-	__asm volatile(
-		"POP {LR} \n"
-		"MOV sp, %0 \n"
-		:
-		: "r" (new_sp)
-		: "sp"
-	);
-
+	restore_lr();
+	switch_to_sp(new_sp);
 
 	//Restore context
-	__asm volatile(
-			"POP {r4-r11}\n"
-			"CPSIE I\n"
-			:
-			:
-			: "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "memory", "cc"
-		);
-	__asm volatile(
-			"BX LR"
-			:
-			:
-			: "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "memory", "cc"
-	);
+	restore_r4r11();
+	atomic_off();
 
+	exit_scheduler();
 
+}
 
+__attribute__((naked))
+void Abstract_Sched_handler(void) {
+	atomic_on();
+	save_r4r11();
+
+	static uint32_t *old_sp;
+	save_sp(old_sp);
+
+	switch_to_sp(scheduler_sp);
+	save_lr();
+
+	static uint32_t *new_sp;
+
+	// ...
+	// Choose the next stack pointer
+	// ... = old_sp
+	// new_sp = ...
+
+	restore_lr();
+	switch_to_sp(new_sp);
+
+	restore_r4r11();
+	atomic_off();
+
+	exit_scheduler();
 
 }
 

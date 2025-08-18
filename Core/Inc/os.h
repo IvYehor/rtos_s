@@ -17,14 +17,18 @@
 /// Stack size for the scheduler in words
 #define SCHEDULER_STACK_SIZE 256
 
+/// Stack size for the scheduler in words
+#define DEFAULT_THREAD_STACK_SIZE 256
+
 #define SCHEDULER_PERIOD_MS 10
-#define MAX_THREADS 5
+#define MAX_THREADS 3
 
 /*
  * Before the fist thread executes, current_thread is equal to NO_TASK_RUNNNING to indicate that OS has just started.
  * During the execution, current_thread is between 0 and MAX_THREADS to indicate the index of the thread that currently executes.
  * */
 #define NO_TASK_RUNNNING MAX_THREADS
+#define DEFAULT_TASK_RUNNNING MAX_THREADS+1
 
 /// heap size in words preallocated on stack
 #define HEAP_SIZE 256*5
@@ -42,6 +46,7 @@ enum ErrorCode { ERROR_OK, ERROR_FAIL };
 
 
 extern uint32_t *scheduler_sp;
+extern uint32_t *default_thread_sp;
 extern uint32_t current_thread;
 extern uint32_t scheduler_tick;
 extern uint32_t os_running;

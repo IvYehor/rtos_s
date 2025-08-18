@@ -13,13 +13,16 @@
 
 uint32_t current_thread;
 uint32_t scheduler_tick;
-uint32_t *scheduler_sp;
 uint32_t os_running = 0;
 
 // Array of TCBs for the tasks
 struct TCB tasks[MAX_THREADS];
 
 uint32_t scheduler_stack_array[SCHEDULER_STACK_SIZE] __attribute__ ((aligned(8)));
+uint32_t *scheduler_sp;
+
+uint32_t default_thread_stack_array[DEFAULT_THREAD_STACK_SIZE] __attribute__ ((aligned(8)));
+uint32_t *default_thread_sp;
 
 
 /*
@@ -161,22 +164,18 @@ void InitScheduler(void) {
 }
 
 void StartScheduler(void) {
-
-	/*if (num_of_threads_allocated == 0) {
-		// No threads were created
-		while(1);
-	}*/
-
+	// Setup scheduler stack
 	uint32_t *scheduler_stack = scheduler_stack_array;
-
 	uint32_t *scheduler_stack_top = (uint32_t *)(scheduler_stack + SCHEDULER_STACK_SIZE);
 	scheduler_sp = --scheduler_stack_top;
+
+	// Default thread
+	setup_stack(default_thread_stack_array, &default_thread_sp, default_thread_func);
 
 	current_thread = NO_TASK_RUNNNING;
 	scheduler_tick = 0;
 	os_running = 1;
 
-	//CreateTask(default_thread_func);
 
 	SysTick->LOAD  = (uint32_t)(8000 * SCHEDULER_PERIOD_MS - 1);                         /* set reload register */
 	NVIC_SetPriority(SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
